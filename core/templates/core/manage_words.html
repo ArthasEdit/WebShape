@@ -1,0 +1,100 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<h1 class="text-3xl mb-5">Add new words</h1>
+<div class="col-span-1 flex justify-center">
+    <form class="w-full" action="{% url 'core:generate_words'%}" method="post">
+      {% csrf_token %}
+      <textarea class="mb-3 bg-gray-100 rounded-xl px-6 py-5 font-semibold border-6 w-full h-[500px]" name='words' id="words">
+      </textarea>
+      {% for field in group_form %}
+      <div class="mb-3">
+        {{ field.label_tag }} {{ field }}
+      </div>
+      {% endfor %}
+
+      {% for field in subject_form %}
+      <div class="mb-3">
+        {{ field.label_tag }} {{ field }}
+      </div>
+      {% endfor %}
+
+      <div class="flex justify-between">
+        <button class="px-6 py-3 m-5 rounded-xl bg-teal-500 text-white hover:bg-teal-700" type="submit">Submit</button>
+      </div>
+    </form>
+</div>
+<hr>
+
+<h1 class="text-2xl mb-5">Subject by:</h1>
+<form method="post" class='mb-5'>
+    {% csrf_token %}
+    {% for subject in subjects %}
+    <a name="subject" value="{{ subject.name }}" class="relative px-6 py-3 rounded-xl bg-teal-300 hover:bg-teal-500" href="{% url 'core:manage_filter' subject.name %}">{{ subject.name|capfirst }}</a>
+    {% endfor %}
+    <a name="subject" value="reset" class="relative px-6 py-3 rounded-xl text-white bg-orange-500 hover:bg-orange-300" href="{% url 'core:manage_filter' 'reset' %}">Reset</a>
+</form>
+<h1 class="text-2xl mb-5">Group by:</h1>
+
+<form method="post" class='mb-5'>
+    {% csrf_token %}
+    {% for group in groups %}
+    <a name="group" value="{{ group.group_name }}" class="relative px-6 py-3 rounded-xl bg-teal-300 hover:bg-teal-500" href="{% url 'core:manage_filter' group.group_name %}">{{ group.group_name|capfirst }}</a>
+    {% endfor %}
+    <a name="group" value="reset" class="relative px-6 py-3 rounded-xl text-white bg-orange-500 hover:bg-orange-300" href="{% url 'core:manage_filter' 'reset' %}">Reset</a>
+</form>
+
+<h1 class="text-3xl mb-5">Delete Words</h1>
+<div class="w-full">
+    <div class="mx-auto w-2/3">
+        <form class="w-full" action="{% url 'core:delete'%}" method="post">
+            {% csrf_token %}
+            <div class="mb-6 bg-gray-300 rounded-xl px-4 py-6 flex items-center">
+                <input class="h-6 w-6 mr-4" type="checkbox" id="select-all"><span class="ml-15 font-bold">Select all</span>
+            </div>
+            <ul class="space-y-4">
+                {% for word in words %}
+                    <li class="bg-gray-300 rounded-xl px-4 py-6 flex items-center">
+                        <input class="h-6 w-6 mr-4" type="checkbox" name="selected_words" value="{{ word.id }}"> <span class="ml-15 font-bold">{{ word.word | capfirst }}</span>
+                    </li>
+                {% endfor %}
+                {% for subject in subjects %}
+                <li class="bg-orange-500 rounded-xl px-4 py-6 flex items-center">
+                    <input class="h-6 w-6 mr-4" type="checkbox" name="selected_words" value="{{ subject.id }}"> <span class="ml-15 font-bold">Subject: {{ subject.name | capfirst }}</span>
+                </li>
+                {% endfor %}
+                {% for group in groups %}
+                <li class="bg-blue-500 rounded-xl px-4 py-6 flex items-center">
+                    <input class="h-6 w-6 mr-4" type="checkbox" name="selected_words" value="{{ group.id }}"> <span class="ml-15 font-bold">Group: {{ group.group_name | capfirst }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <button class="px-6 py-3 mt-5 rounded-xl bg-red-500 text-white hover:bg-red-700" type="submit">Delete</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var selectAllCheckbox = document.getElementById('select-all');
+        var wordCheckboxes = document.querySelectorAll('input[name="selected_words"]');
+
+        selectAllCheckbox.addEventListener('change', function () {
+            wordCheckboxes.forEach(function (checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+
+        wordCheckboxes.forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                // If any individual checkbox is unchecked, uncheck "Select All"
+                selectAllCheckbox.checked = !wordCheckboxes.some(function (checkbox) {
+                    return !checkbox.checked;
+                });
+            });
+        });
+    });
+</script>
+
+{% endblock %}

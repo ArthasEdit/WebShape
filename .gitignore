@@ -1,0 +1,11 @@
+# Ignore configuration and environment files
+.env
+config.ini
+words_formatted.py
+words.json
+
+
+
+env/
+
+.vscode/

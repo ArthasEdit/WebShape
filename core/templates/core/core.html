@@ -1,0 +1,106 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="bg-gray-100">
+  <div class="container mx-auto p-4 md:p-6 py-6">
+    <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+      <form method="post" class="text-center flex flex-col bg-teal-300 rounded-xl p-4 md:p-6 space-y-2">
+        {% csrf_token %}
+        {% for subject in subjects %}
+        <a name="subject" value="{{ subject.name }}" class="block px-6 py-3 rounded-xl bg-teal-300 hover:bg-teal-500" href="{% url 'core:subject_view' subject.name %}">{{ subject.name|capfirst }}</a>
+        {% endfor %}
+        {% for group in groups %}
+        <a name="subject" value="{{ group.group_name }}" class="block px-6 py-3 rounded-xl bg-teal-300 hover:bg-teal-500" href="{% url 'core:subject_view' group.group_name %}">{{ group.group_name|capfirst }}</a>
+        {% endfor %}
+      </form>
+      <div class="bg-green-200 rounded-xl p-4 md:p-6 flex-1">
+        <h1 class="text-2xl md:text-4xl mb-4 md:mb-6 bg-green-100 rounded-xl p-4 md:p-6 font-semibold text-center">
+          <span class="text-base md:text-[40px] inline-block">{{ vocabulary_word.word | capfirst }}</span>
+          <span class='float-right text-sm md:text-base'><a class="block md:inline-block px-4 py-3 rounded-xl bg-teal-200 text-center text-[10px] md:text-[25px]" href="{% url 'core:core_reversed' %}">Reverse</a></span>
+        </h1>
+        
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-green-300 rounded-xl">
+            <p class="p-2 md:p-4 flex justify-end">Positive: {{ correct|length }}</p>
+            <h1 class="text-center font-semibold">Correct!</h1>
+            <div class="px-4 md:px-6 mb-4 md:mb-5 py-4 w-full max-h-48 overflow-y-auto">
+              <table class="w-full">
+                <tr class="text-center">
+                  <td><b>Word</b></td>
+                  <td><b>Definition</b></td>
+                </tr>
+                {% for item in correct %}
+                <tr class="border-b border-b-2 border-black {% cycle 'bg-green-200' '' %}">
+                  <td class="w-1/2">{{ item.vocabulary_word.word | capfirst }}</td>
+                  <td class="border-l border-l-2 border-black flex justify-end">{{ item.vocabulary_word.definition }}</td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-center">
+              <form class="w-full" action="{% url 'core:check_answer' vocabulary_word.id %}" method="post">
+                {% csrf_token %}
+                <input autofocus class="mb-4 md:mb-0 bg-gray-100 rounded-xl p-4 md:p-6 font-semibold border-6 text-center w-full" type="text" name="answer" id="answer" />
+                <div class="flex justify-between">
+                  <button class="px-4 md:px-6 py-2 md:py-3 m-4 md:m-5 rounded-xl bg-teal-500 text-white hover:bg-teal-700" type="submit">Submit</button>
+                  <a class="px-4 md:px-6 py-2 md:py-3 m-4 md:m-5 rounded-xl bg-teal-500 text-white hover:bg-teal-700" href="{% url 'core:reset' %}">Reset</a>
+                </div>
+              </form>
+            </div>
+            <button id="copyButton" class="w-full px-4 md:px-6 py-2 md:py-3 mr-4 md:mr-5 rounded-xl bg-teal-500 text-white hover:bg-teal-700">Copy Incorrect Words</button>
+            
+          </div>
+          <div class="bg-red-200 rounded-xl">
+            <p class="p-2 md:p-4">Negative: {{ incorrect|length }}</p>
+            <h1 class="text-center font-semibold">Incorrect!</h1>
+            <div class="px-4 md:px-6 mb-4 md:mb-5 py-4 w-full max-h-48 overflow-y-auto">
+              <table class="w-full">
+                <tr class="text-center">
+                  <td><b>Word</b></td>
+                  <td><b>Answer</b></td>
+                </tr>
+                {% for item in incorrect %}
+                <tr class="border-b border-b-2 border-black incorrectwords{% cycle 'bg-red-300' '' %}">
+                  <td class="w-1/2 border-r border-r-2 border-black">{{ item.vocabulary_word.word | capfirst }}</td>
+                  <td class="flex justify-end cursor-pointer hover:opacity-100 opacity-0 transition-opacity">{{ item.vocabulary_word.definition }}</td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('copyButton').addEventListener('click', function() {
+    const incorrectRowElements = document.querySelectorAll('.incorrectwords');
+
+    const incorrectTextArray = [];
+    incorrectRowElements.forEach(function(rowElement) {
+      const wordElement = rowElement.querySelector('td:first-child');
+      const definitionElement = rowElement.querySelector('td:last-child');
+
+      const word = wordElement.textContent;
+      const definition = definitionElement.textContent;
+
+      const incorrectText = `${word} - ${definition}`;
+      incorrectTextArray.push(incorrectText);
+    });
+
+    const copiedText = incorrectTextArray.join('\n');
+    const textArea = document.createElement('textarea');
+    textArea.value = copiedText;
+
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+  });
+</script>
+{% endblock %}
