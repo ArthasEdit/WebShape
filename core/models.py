@@ -5,10 +5,10 @@ class Subject(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True,)
     def __str__(self):
-        return self.name
+        return f"{self.name} | {self.user}"
     
 class GroupName(models.Model):
-    group_name = models.CharField(max_length=255, blank=True, null=True, default='others')
+    group_name = models.CharField(max_length=255, default='others')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     
     def __str__(self):
@@ -24,7 +24,7 @@ class VocabularyWord(models.Model):
 
 
     def __str__(self):
-        return self.word
+        return f"{self.word} | {self.definition}"
 
 
 class UserAnswer(models.Model):
@@ -34,6 +34,6 @@ class UserAnswer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None, blank=True, null=True,)
 
     def __str__(self):
-        return self.vocabulary_word.word
+        return f"{self.vocabulary_word.word} | {self.vocabulary_word.definition}"
 
 

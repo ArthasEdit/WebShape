@@ -4,13 +4,13 @@
 <div class="bg-gray-100">
   <div class="container mx-auto p-4 md:p-6 py-6">
     <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-      <form method="post" class="text-center flex flex-col bg-teal-300 rounded-xl p-4 md:p-6 space-y-2 max-h-48 overflow-y-auto md:max-h-[600px]">
+      <form method="post" class="text-center flex flex-col bg-teal-300 rounded-xl p-4 md:p-6 space-y-2 max-h-36 overflow-y-auto md:max-h-[600px]">
         {% csrf_token %}
         {% for subject in subjects %}
-        <a name="subject" value="{{ subject.name }}" class="block px-6 py-3 rounded-xl bg-teal-300 hover:bg-teal-500" href="{% url 'core:subject_view' subject.name %}">{{ subject.name|capfirst }}</a>
+        <a name="subject" value="{{ subject.name }}" class="block px-6 py-3 rounded-xl bg-teal-300 hover:bg-teal-500" href="{% url 'core:filter_reverse' subject.name %}">{{ subject.name|capfirst }}</a>
         {% endfor %}
         {% for group in groups %}
-        <a name="subject" value="{{ group.group_name }}" class="block px-6 py-3 rounded-xl bg-teal-300 hover:bg-teal-500" href="{% url 'core:subject_view' group.group_name %}">{{ group.group_name|capfirst }}</a>
+        <a name="subject" value="{{ group.group_name }}" class="block px-6 py-3 rounded-xl bg-teal-300 hover:bg-teal-500" href="{% url 'core:filter_reverse' group.group_name %}">{{ group.group_name|capfirst }}</a>
         {% endfor %}
       </form>
       <div class="bg-green-200 rounded-xl p-4 md:p-6 flex-1">

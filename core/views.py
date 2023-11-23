@@ -14,13 +14,12 @@ from .models import VocabularyWord
 from .serializers import VocabularyWordSerializer
 
 # Create your views here.
-def grouping(request, group_name):
-    if request.method == "POST":
-        vocabulary_word = VocabularyWord.objects.filter(group_name=group_name)
-        return redirect("core:core", vocabulary_word)
+def pt(name):
+    print(f"\n{name} is started. . . \n\n")
 
 # register login
 def register(request):
+    pt('register')
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -54,6 +53,7 @@ def register(request):
 
 
 def user_login(request):
+    pt('user_login')
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -69,6 +69,7 @@ def user_login(request):
 
 @login_required
 def core(request):
+    pt('core')
     try:
         correct = UserAnswer.objects.filter(is_correct=True, user=request.user)[::-1]
         incorrect = UserAnswer.objects.filter(is_correct=False, user=request.user)[::-1]
@@ -119,12 +120,13 @@ def core(request):
 
 @login_required
 def core_reversed(request):
+    pt('core_reversed')
     correct = UserAnswer.objects.filter(is_correct=True, user=request.user)[::-1]
     incorrect = UserAnswer.objects.filter(is_correct=False, user=request.user)[::-1]
     try:
         all_item_pks = request.session.get('all_items', [])
         # Retrieve the VocabularyWord objects using the primary keys
-        all_items = VocabularyWord.objects.filter(pk__in=all_item_pks, user=request.user)
+        all_items = VocabularyWord.objects.filter(user=request.user, pk__in=all_item_pks)
         print(all_items)
         for item in all_items:
             vocabulary_word = random.choice(all_items)
@@ -166,15 +168,16 @@ def core_reversed(request):
 
 
 def check_answer(request, vw):
+    pt('check_answer')
     vocabulary_word = get_object_or_404(VocabularyWord, pk=vw)
-    answer = request.POST.get('answer')
+    answer = str(request.POST.get('answer')).lower()
     print(f"Answer received: {answer}")
     if ', ' in vocabulary_word.definition:
         sd = vocabulary_word.definition.split(', ')
         print(sd)
-        is_correct = str(answer).lower() in sd
+        is_correct = answer in sd
     else:
-        is_correct = str(answer).lower() == str(vocabulary_word.definition).lower()
+        is_correct = answer == str(vocabulary_word.definition).lower()
 
     if answer is not None:
         user_answer = UserAnswer.objects.create(
@@ -186,10 +189,11 @@ def check_answer(request, vw):
     return redirect(reverse('core:core'))
 
 def check_answer_reversed(request, vw):
+    pt('check_answer_reversed')
     vocabulary_word = get_object_or_404(VocabularyWord, pk=vw)
-    answer = request.POST.get('answer')
+    answer = str(request.POST.get('answer')).lower()
     print(f"Answer received: {answer}")
-    is_correct = str(answer).lower() == str(vocabulary_word.word).lower()
+    is_correct = answer == str(vocabulary_word.word).lower()
 
     if answer is not None:
         user_answer = UserAnswer.objects.create(
@@ -201,11 +205,13 @@ def check_answer_reversed(request, vw):
     return redirect(reverse('core:core_reversed'))
 
 def reset(request):
+    pt('reset')
     UserAnswer.objects.all().delete()
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 @login_required
 def manage_words(request):
+    pt('manage_words')
     subjects = Subject.objects.filter(user=request.user)
     groups = GroupName.objects.filter(user=request.user)
     
@@ -222,6 +228,7 @@ def manage_words(request):
 
 @login_required
 def manage_words_filter(request, sub_name):
+    pt('manage_words_filter')
     subjects = Subject.objects.filter(user=request.user)
     groups = GroupName.objects.filter(user=request.user)
     subject_form = SubjectForm()
@@ -245,18 +252,19 @@ def manage_words_filter(request, sub_name):
 
 @login_required
 def generate_words(request):
+    pt('generate_words')
     if request.method == 'POST':
         subject_form = SubjectForm(request.POST)
         group_form = GroupNameForm(request.POST)
 
         if subject_form.is_valid():
-            subject_name = subject_form.cleaned_data['subject_name']
+            subject_name = subject_form.cleaned_data['subject_name'].lower()
             existing_subject = Subject.objects.filter(name=subject_name, user=request.user).first()
             if existing_subject is None:
                 Subject.objects.create(name=subject_name, user=request.user)
 
         if group_form.is_valid():
-            group_name = group_form.cleaned_data.get('group_name')
+            group_name = group_form.cleaned_data.get('group_name').lower()
             if group_name is not None:
                 existing_group = GroupName.objects.filter(group_name=group_name, user=request.user).first()
                 if existing_group is None:
@@ -291,6 +299,7 @@ def generate_words(request):
     return redirect('core:manage_words')
 
 def delete_words(request):
+    pt('delete_words')
     selected_words = request.POST.getlist('selected_words')
     VocabularyWord.objects.filter(pk__in=selected_words).delete()
     Subject.objects.filter(pk__in=selected_words).delete()
@@ -299,10 +308,20 @@ def delete_words(request):
     vocabulary_words = VocabularyWord.objects.all()
     return redirect(reverse("core:manage_words"))
 
-def subject_core(request, subject_name):
-    all_items = VocabularyWord.objects.filter(subject__name=subject_name, user=request.user)
+def core_filter(request, name):
+    pt('core_filter')
+
+
+    # Check if the name matches any Subject
+    subject_match = Subject.objects.filter(name=name, user=request.user).exists()
+    if subject_match:
+        all_items = VocabularyWord.objects.filter(subject__name=name, user=request.user)
+    else:
+        all_items = VocabularyWord.objects.filter(group_by__group_name=name, user=request.user)
+
     request.session['all_items'] = list(all_items.values_list('pk', flat=True))
-    print(subject_name)
+
+
     # Redirect to 'core_reversed' without changing the URL
     link = request.META.get('HTTP_REFERER')
     if 'core_reversed' in link:
